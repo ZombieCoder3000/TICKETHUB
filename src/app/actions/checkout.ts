@@ -26,7 +26,6 @@ export async function createCheckoutSession(formData: FormData) {
 
   const remaining = tier.capacity - tier.tickets_sold;
 
-  // Server-side inventory limit check
   if (quantity > remaining) {
     return redirect(
       `/events/${tier.event.id}?error=Only+${remaining}+ticket(s)+available+for+${encodeURIComponent(
@@ -41,7 +40,6 @@ export async function createCheckoutSession(formData: FormData) {
     return redirect(`/events/${tier.event.id}?error=Payment+gateway+configuration+error`);
   }
 
-  // Calculate total amount in Kobo (1 NGN = 100 Kobo)
   const totalAmountInKobo = tier.price * quantity * 100;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 

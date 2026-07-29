@@ -1,0 +1,116 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  SUPERADMIN
+  ORGANIZER
+  ATTENDEE
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+}
+
+model Profile {
+  id            String         @id
+  full_name     String
+  email         String         @unique
+  role          UserRole       @default(ATTENDEE)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  organizations Organization[]
+  orders        Order[]
+
+  @@map("profiles")
+}
+
+model Organization {
+  id         String   @id @default(uuid())
+  name       String
+  slug       String   @unique
+  owner_id   String
+  owner      Profile  @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  events     Event[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("organizations")
+}
+
+model Event {
+  id              String       @id @default(uuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  cover_image_url String?
+  location        String
+  start_date      DateTime
+  end_date        DateTime
+  is_published    Boolean      @default(false)
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
+  ticket_tiers    TicketTier[]
+
+  @@map("events")
+}
+
+model TicketTier {
+  id           String   @id @default(uuid())
+  event_id     String
+  event        Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  name         String
+  price        Int
+  capacity     Int
+  tickets_sold Int      @default(0)
+  tickets      Ticket[]
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@map("ticket_tiers")
+}
+
+model Order {
+  id                String        @id @default(uuid())
+  user_id           String?
+  user              Profile?      @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  event_id          String
+  total_amount      Int
+  payment_status    PaymentStatus @default(PENDING)
+  payment_reference String?       @unique
+  tickets           Ticket[]
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+
+  @@map("orders")
+}
+
+model Ticket {
+  id           String       @id @default(uuid())
+  order_id     String
+  order        Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  tier_id      String
+  tier         TicketTier   @relation(fields: [tier_id], references: [id])
+  holder_name  String
+  holder_email String
+  qr_code_hash String       @unique
+  status       TicketStatus @default(VALID)
+  scanned_at   DateTime?
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+
+  @@map("tickets")
+}
