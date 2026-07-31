@@ -1,15 +1,17 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+let client: ReturnType<typeof createBrowserClient> | undefined
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Supabase credentials missing:', { supabaseUrl, supabaseAnonKey })
+export function createClient() {
+  if (client) return client
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    throw new Error('Supabase URL or Anon Key is missing from process.env')
   }
 
-  return createBrowserClient(
-    supabaseUrl,
-    supabaseAnonKey
-  )
+  client = createBrowserClient(url, key)
+  return client
 }
