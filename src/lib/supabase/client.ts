@@ -1,7 +1,15 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createBrowserClient } from '@supabase/ssr'
 
-export const createClient = () =>
-  createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-  );
+export function createClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Supabase credentials missing:', { supabaseUrl, supabaseAnonKey })
+  }
+
+  return createBrowserClient(
+    supabaseUrl,
+    supabaseAnonKey
+  )
+}
